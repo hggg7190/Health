@@ -148,7 +148,7 @@ def list_metrics() -> str:
     return json.dumps([r["metric"] for r in rows], ensure_ascii=False)
 
 
-mcp_app = mcp.streamable_http_app()
+mcp_app = mcp.sse_app()
 api.mount("/mcp", mcp_app)
 
 if __name__ == "__main__":
