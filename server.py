@@ -14,12 +14,12 @@ API_TOKEN = os.environ.get("API_TOKEN", "")
 # ---------- 数据库 ----------
 @contextmanager
 def get_db():
- conn = sqlite3.connect(DB_PATH)
- conn.row_factory = sqlite3.Row
- try:
- yield conn
- finally:
- conn.close()
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 def init_db():
  os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
