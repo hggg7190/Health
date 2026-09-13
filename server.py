@@ -148,7 +148,8 @@ def list_metrics() -> str:
     return json.dumps([r["metric"] for r in rows], ensure_ascii=False)
 
 
-api.mount("/mcp", mcp.http_app(stateless_http=True))
+mcp_app = mcp.streamable_http_app()
+api.mount("/mcp", mcp_app)
 
 if __name__ == "__main__":
     import uvicorn
