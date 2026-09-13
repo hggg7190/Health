@@ -148,8 +148,7 @@ def list_metrics() -> str:
     return json.dumps([r["metric"] for r in rows], ensure_ascii=False)
 
 
-mcp_app = mcp.sse_app()
-api.mount("/mcp", mcp_app)
+api.mount("/mcp", mcp.http_app())
 
 if __name__ == "__main__":
     import uvicorn
