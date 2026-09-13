@@ -4,8 +4,9 @@ import sqlite3
 from datetime import datetime, timedelta
 from contextlib import contextmanager
 
-from fastapi import FastAPI, Request, HTTPException
 from fastmcp import FastMCP
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 DB_PATH = os.environ.get("DB_PATH", "/data/health.db")
 API_TOKEN = os.environ.get("API_TOKEN", "")
@@ -43,14 +44,14 @@ def init_db():
 
 init_db()
 
-api = FastAPI()
+mcp = FastMCP("HealthData")
 
 
-@api.post("/upload")
+@mcp.custom_route("/upload", methods=["POST"])
 async def upload(request: Request):
     auth = request.headers.get("Authorization", "")
     if API_TOKEN and auth != f"Bearer {API_TOKEN}":
-        raise HTTPException(status_code=401, detail="Unauthorized")
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
     body = await request.json()
     items = body.get("data", [body]) if "data" in body else [body]
     with get_db() as conn:
@@ -60,10 +61,7 @@ async def upload(request: Request):
                 (item["metric"], item["value"], item.get("unit", ""), item["recorded_at"]),
             )
         conn.commit()
-    return {"ok": True, "inserted": len(items)}
-
-
-mcp = FastMCP("HealthData")
+    return JSONResponse({"ok": True, "inserted": len(items)})
 
 
 @mcp.tool()
@@ -148,8 +146,5 @@ def list_metrics() -> str:
     return json.dumps([r["metric"] for r in rows], ensure_ascii=False)
 
 
-api.mount("/mcp", mcp.http_app())
-
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(api, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
+    mcp.run(transport="http", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
